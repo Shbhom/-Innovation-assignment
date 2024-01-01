@@ -3,7 +3,8 @@ import { loginUser, registerUser } from "../controller/auth.controller"
 import verifyUser from "../middleware/verifyUser"
 import { upload } from "../utils/pfp.utils"
 import { AdminCheck } from "../middleware/userTypeCheck"
-import { deleteUser, getCurrentUser, getUserById, updateCurrentUser, updateCurrentUserPfp, updateUserById, updateUserPfpById } from "../controller/user.controller"
+import { deleteUser, getCurrentUser, updateCurrentUser, updateCurrentUserPfp } from "../controller/user.controller"
+import { deleteUserById, getUserById, updateUserById, updateUserPfpById, } from "../controller/admin.controller"
 const userRouter = express.Router()
 
 userRouter.post("/register", upload.single('pfp'), registerUser)
@@ -18,7 +19,8 @@ userRouter.put("/current", upload.single('pfp'), verifyUser, updateCurrentUserPf
 userRouter.patch("/ById/:Id", verifyUser, AdminCheck, updateUserById)
 userRouter.put("/ById/:Id", upload.single('pfp'), verifyUser, AdminCheck, updateUserPfpById)
 
-userRouter.delete("/current",verifyUser,deleteUser)
+userRouter.delete("/current", verifyUser, deleteUser)
+userRouter.delete("/ById/:Id", verifyUser, deleteUserById)
 
 
 export default userRouter

@@ -3,16 +3,6 @@ import User from "../models/user.schema";
 import { CustomError } from "../utils/error.utils";
 import { removePfp, updatePfp } from "../services/pfpService";
 
-export async function getCurrentUser(req: Request, res: Response, next: NextFunction) {
-    try {
-        const user = req.user
-        return res.status(200).json({
-            user
-        })
-    } catch (err: any) {
-        return next(err)
-    }
-}
 
 export async function getUserById(req: Request, res: Response, next: NextFunction) {
     try {
@@ -29,31 +19,38 @@ export async function getUserById(req: Request, res: Response, next: NextFunctio
     }
 }
 
-export async function updateCurrentUser(req: Request, res: Response, next: NextFunction) {
+
+export async function updateUserById(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name } = req.body
-        const user = req.user
-        const newUser = await User.findByIdAndUpdate(user!._id, { name: name })
+        let { Id } = req.params
+        const { name }: { name: string } = req.body
+        const user = await User.findById(Id)
+        if (!user) {
+            throw new CustomError("No user found with given Id", 404)
+        }
+        user.name = name
+        await user.save()
         return res.status(200).json({
-            message: `user's name successfully updated to ${name}`,
-            newUser
+            message: "updated successfully",
+            user
         })
     } catch (err: any) {
         return next(err)
     }
 }
 
-export async function updateCurrentUserPfp(req: Request, res: Response, next: NextFunction) {
+export async function updateUserPfpById(req: Request, res: Response, next: NextFunction) {
     try {
-        const user = req.user
-
+        const { Id } = req.params
         const pfp = req.file
 
-        if (!user) {
-            throw new CustomError("Not authorized", 403)
-        }
         if (!pfp) {
             throw new CustomError("No pfp found invalid request", 400)
+        }
+        const user = await User.findById(Id)
+
+        if (!user) {
+            throw new CustomError("No user found with following Id", 404)
         }
 
         let { isUploaded, link } = await updatePfp(user, pfp)
@@ -61,6 +58,7 @@ export async function updateCurrentUserPfp(req: Request, res: Response, next: Ne
         if (!isUploaded) {
             throw new CustomError("Unable to update user pfp", 500)
         }
+
         return res.status(200).json({
             message: "image updated successfully",
             link
@@ -70,9 +68,17 @@ export async function updateCurrentUserPfp(req: Request, res: Response, next: Ne
     }
 }
 
-export async function deleteUser(req: Request, res: Response, next: NextFunction) {
+
+export async function deleteUserById(req: Request, res: Response, next: NextFunction) {
     try {
-        const user = req.user
+        const { Id } = req.params
+        if (!Id) {
+            throw new CustomError("invalid request, No Id passed", 400)
+        }
+        const user = await User.findById(Id)
+        if (!user) {
+            throw new CustomError("No user found with passed ID", 404)
+        }
         const isRemoved = await removePfp(user!)
         if (!isRemoved) {
             throw new CustomError("Unable to remove pfp", 500)
