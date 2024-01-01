@@ -53,7 +53,7 @@ const userSchema = new Schema({
 
 userSchema.pre("save", async function (next) {
     const user = this as unknown as userDocument
-    if (!user.phone || !user.email) {
+    if (!user.phone && !user.email) {
         throw new CustomError("no phoneNo or email found in the Document", 400)
     } else {
         return next()
